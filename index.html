@@ -33,14 +33,18 @@ function useSubmissions() {
   function persist(arr) { localStorage.setItem('hubSubmissions', JSON.stringify(arr)); setSubmissions(arr); }
   async function addSubmission(data) {
     const entry = { ...data, id: genId(), submittedAt: new Date().toISOString(), status: 'Waitlist', approvedAt: null, liveAt: null };
-    if (APPS_SCRIPT_URL) { await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'submit', data: entry }) }); setSubmissions(prev => [...prev, entry]); }
-    else { persist([...submissions, entry]); }
+    if (APPS_SCRIPT_URL) {
+      fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'submit', data: entry }) }).catch(()=>{});
+      setSubmissions(prev => [...prev, entry]);
+    } else { persist([...submissions, entry]); }
     return entry;
   }
   async function updateSubmission(id, patch) {
     const updated = submissions.map(s => s.id === id ? { ...s, ...patch } : s);
-    if (APPS_SCRIPT_URL) { await fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'update', id, patch }) }); setSubmissions(updated); }
-    else { persist(updated); }
+    if (APPS_SCRIPT_URL) {
+      fetch(APPS_SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'update', id, patch }) }).catch(()=>{});
+      setSubmissions(updated);
+    } else { persist(updated); }
   }
   return { submissions, addSubmission, updateSubmission };
 }
