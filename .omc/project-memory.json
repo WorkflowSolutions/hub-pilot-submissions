@@ -35,14 +35,14 @@
   "hotPaths": [
     {
       "path": "client/src/App.jsx",
-      "accessCount": 5,
-      "lastAccessed": 1790818866174,
+      "accessCount": 8,
+      "lastAccessed": 1790819115975,
       "type": "file"
     },
     {
       "path": "server/routes/submissions.js",
-      "accessCount": 4,
-      "lastAccessed": 1790818843761,
+      "accessCount": 5,
+      "lastAccessed": 1790819092036,
       "type": "file"
     },
     {
@@ -61,6 +61,12 @@
       "path": "client/src/lib/api.js",
       "accessCount": 2,
       "lastAccessed": 1790818847337,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/WaitlistPage.jsx",
+      "accessCount": 2,
+      "lastAccessed": 1790819100617,
       "type": "file"
     },
     {
@@ -172,9 +178,9 @@
       "type": "file"
     },
     {
-      "path": "client/src/pages/WaitlistPage.jsx",
+      "path": "client/src/pages/ApprovedLivePage.jsx",
       "accessCount": 1,
-      "lastAccessed": 1790818857639,
+      "lastAccessed": 1790819108502,
       "type": "file"
     }
   ],

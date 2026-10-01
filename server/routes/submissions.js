@@ -83,7 +83,7 @@ router.post('/lookup', (req, res) => {
   res.json(rowToSub(row));
 });
 
-// GET /api/submissions/public — public: read-only view (agency info only, no submitter details)
+// GET /api/submissions/public — public: read-only view (no submitter email or user details)
 router.get('/public', (req, res) => {
   const rows = db.prepare('SELECT * FROM submissions ORDER BY submitted_at DESC').all();
   res.json(rows.map(row => ({
@@ -92,8 +92,8 @@ router.get('/public', (req, res) => {
     brandName: row.brand_name,
     marketingPlatform: row.marketing_platform,
     artworkBuilder: row.artwork_builder,
-    engageUsage: row.engage_usage,
-    rtaUsage: row.rta_usage,
+    submitterName: row.submitter_name,
+    submitterTitle: row.submitter_title,
     status: row.status,
     submittedAt: row.submitted_at,
     approvedAt: row.approved_at,

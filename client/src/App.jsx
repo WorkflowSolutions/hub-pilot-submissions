@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import SubmitPage from './pages/SubmitPage';
 import LoginPage from './pages/LoginPage';
 import WaitlistPage from './pages/WaitlistPage';
+import ApprovedLivePage from './pages/ApprovedLivePage';
 import SubmissionsAdminPage from './pages/SubmissionsAdminPage';
 
 function Nav({ page, setPage }) {
@@ -25,7 +26,13 @@ function Nav({ page, setPage }) {
             onClick={() => setPage('waitlist')}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${page === 'waitlist' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
           >
-            View Waitlist
+            Waitlist
+          </button>
+          <button
+            onClick={() => setPage('approved')}
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${page === 'approved' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Approved &amp; Live
           </button>
           {isAdmin && (
             <button
@@ -65,6 +72,7 @@ function AppInner() {
       <Nav page={page} setPage={setPage} />
       {page === 'submit' && <SubmitPage />}
       {page === 'waitlist' && <WaitlistPage />}
+      {page === 'approved' && <ApprovedLivePage />}
       {page === 'login' && (
         <LoginPage onSuccess={(role) => setPage(role === 'admin' ? 'admin' : 'submit')} />
       )}
