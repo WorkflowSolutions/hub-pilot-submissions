@@ -14,6 +14,75 @@ const EMPTY = {
   additionalUsers: [],
 };
 
+const CRITERIA_ITEMS = [
+  {
+    heading: 'Agency type',
+    items: [
+      'Office Admin of a single agency — Realhub',
+      'Office Admin of a single agency — Campaigntrack',
+      'Brand Admin — Realhub',
+    ],
+  },
+  {
+    heading: 'Users',
+    items: [
+      'If on Campaigntrack, ideally no toggles enabled',
+      'Relatively clean data',
+    ],
+  },
+  {
+    heading: 'Products',
+    items: ['Also using RTA and/or Engage (a bonus, not a hard requirement)'],
+  },
+  {
+    heading: 'People',
+    items: [
+      'Willing to give feedback',
+      'Patient with an evolving process',
+      'A friendly contact',
+    ],
+  },
+];
+
+function CriteriaContent() {
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-lg border border-blue-100">
+      {CRITERIA_ITEMS.map(({ heading, items }) => (
+        <div key={heading}>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{heading}</p>
+          <ul className="space-y-1.5">
+            {items.map(item => (
+              <li key={item} className="flex items-start gap-1.5 text-xs text-gray-700">
+                <span className="text-blue-500 mt-0.5 shrink-0">✓</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CriteriaPanel() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 rounded-lg overflow-hidden border border-blue-100">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+      >
+        <span>View pilot criteria</span>
+        <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <CriteriaContent />}
+    </div>
+  );
+}
+
 function UserFields({ user, onChange, onRemove, index }) {
   const set = (k, v) => onChange({ ...user, [k]: v });
   return (
@@ -124,7 +193,7 @@ export default function SubmitPage() {
   })() : '#';
 
   if (mode === 'choose') return (
-    <div className="max-w-lg mx-auto mt-12 px-4">
+    <div className="max-w-lg mx-auto mt-12 px-4 pb-12">
       <Card className="p-8 text-center">
         <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +207,10 @@ export default function SubmitPage() {
           <Btn variant="secondary" onClick={() => setMode('lookup')}>Edit an existing submission</Btn>
         </div>
       </Card>
+      <div className="mt-6">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide text-center mb-3">Who are we looking for?</p>
+        <CriteriaContent />
+      </div>
     </div>
   );
 
@@ -206,10 +279,13 @@ export default function SubmitPage() {
                 <input type="checkbox" className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600" checked={form.checkedWaitlist} onChange={e => set('checkedWaitlist', e.target.checked)} />
                 <span className="text-sm text-gray-700">I have checked the <strong>Waitlist</strong> and confirmed this agency has not already been submitted.</span>
               </label>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600" checked={form.meetsCriteria} onChange={e => set('meetsCriteria', e.target.checked)} />
-                <span className="text-sm text-gray-700">I have confirmed this agency <strong>meets the Hub pilot criteria</strong>.</span>
-              </label>
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600" checked={form.meetsCriteria} onChange={e => set('meetsCriteria', e.target.checked)} />
+                  <span className="text-sm text-gray-700">I have confirmed this agency <strong>meets the Hub pilot criteria</strong>.</span>
+                </label>
+                <CriteriaPanel />
+              </div>
             </div>
             {(!form.checkedWaitlist || !form.meetsCriteria) && (
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">

@@ -35,6 +35,8 @@ function rowToSub(row) {
     submittedAt: row.submitted_at,
     approvedAt: row.approved_at,
     liveAt: row.live_at,
+    rejectionReason: row.rejection_reason || null,
+    rejectedAt: row.rejected_at || null,
   };
 }
 
@@ -147,7 +149,7 @@ router.patch('/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!['Waitlist', 'Approved', 'Live'].includes(status)) {
+  if (!['Waitlist', 'Approved', 'Live', 'Rejected'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });
   }
 
@@ -156,16 +158,29 @@ router.patch('/:id', requireAdmin, (req, res) => {
 
   let approvedAt = existing.approved_at;
   let liveAt = existing.live_at;
+  let rejectedAt = existing.rejected_at;
+  const rejectionReason = req.body.rejectionReason || null;
+
   if (status === 'Approved' && !approvedAt) approvedAt = new Date().toISOString();
   if (status === 'Live') {
     liveAt = new Date().toISOString();
     if (!approvedAt) approvedAt = new Date().toISOString();
   }
+  if (status === 'Rejected' && !rejectedAt) rejectedAt = new Date().toISOString();
 
-  db.prepare('UPDATE submissions SET status = ?, approved_at = ?, live_at = ? WHERE id = ?')
-    .run(status, approvedAt, liveAt, id);
+  db.prepare('UPDATE submissions SET status = ?, approved_at = ?, live_at = ?, rejected_at = ?, rejection_reason = ? WHERE id = ?')
+    .run(status, approvedAt, liveAt, rejectedAt, rejectionReason, id);
 
   res.json(rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)));
+});
+
+// DELETE /api/submissions/:id — admin: permanently delete a submission
+router.delete('/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const existing = db.prepare('SELECT id FROM submissions WHERE id = ?').get(id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  db.prepare('DELETE FROM submissions WHERE id = ?').run(id);
+  res.json({ ok: true });
 });
 
 export default router;

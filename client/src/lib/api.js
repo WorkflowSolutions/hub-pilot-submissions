@@ -23,5 +23,6 @@ export const api = {
   update: (id, data) => req(`/api/submissions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   getPublic: () => req('/api/submissions/public'),
   getAll: () => req('/api/submissions'),
-  updateStatus: (id, status) => req(`/api/submissions/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  updateStatus: (id, status, rejectionReason) => req(`/api/submissions/${id}`, { method: 'PATCH', body: JSON.stringify({ status, ...(rejectionReason ? { rejectionReason } : {}) }) }),
+  deleteSubmission: (id) => req(`/api/submissions/${id}`, { method: 'DELETE' }),
 };

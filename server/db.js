@@ -34,4 +34,8 @@ db.exec(`
   )
 `);
 
+// Migrate: add rejection columns if they don't exist yet
+try { db.exec('ALTER TABLE submissions ADD COLUMN rejection_reason TEXT'); } catch {}
+try { db.exec('ALTER TABLE submissions ADD COLUMN rejected_at TEXT'); } catch {}
+
 export default db;

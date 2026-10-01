@@ -4,7 +4,7 @@ import { Badge, Card, Btn, Input, Sel } from '../components/ui';
 
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-const STATUS_OPTIONS = ['Waitlist', 'Approved', 'Live'];
+const STATUS_OPTIONS = ['Waitlist', 'Approved', 'Live', 'Rejected'];
 
 export default function SubmissionsAdminPage() {
   const [submissions, setSubmissions] = useState([]);
@@ -14,8 +14,10 @@ export default function SubmissionsAdminPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [expanded, setExpanded] = useState(null);
   const [pending, setPending] = useState({});
+  const [rejectionReasons, setRejectionReasons] = useState({});
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
+  const [deleting, setDeleting] = useState({});
 
   useEffect(() => {
     api.getAll()
@@ -34,22 +36,43 @@ export default function SubmissionsAdminPage() {
     Waitlist: submissions.filter(s => s.status === 'Waitlist').length,
     Approved: submissions.filter(s => s.status === 'Approved').length,
     Live: submissions.filter(s => s.status === 'Live').length,
+    Rejected: submissions.filter(s => s.status === 'Rejected').length,
   };
 
   async function handleSave(id) {
     const cur = submissions.find(s => s.id === id);
     if (!pending[id] || pending[id] === cur?.status) return;
+    const newStatus = pending[id];
+    if (newStatus === 'Rejected' && !rejectionReasons[id]?.trim()) {
+      alert('Please enter a rejection reason before saving.');
+      return;
+    }
     setSaving(p => ({ ...p, [id]: true }));
     try {
-      const updated = await api.updateStatus(id, pending[id]);
+      const updated = await api.updateStatus(id, newStatus, newStatus === 'Rejected' ? rejectionReasons[id] : undefined);
       setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
       setPending(p => { const c = { ...p }; delete c[id]; return c; });
+      setRejectionReasons(p => { const c = { ...p }; delete c[id]; return c; });
       setSaved(p => ({ ...p, [id]: true }));
       setTimeout(() => setSaved(p => { const c = { ...p }; delete c[id]; return c; }), 2500);
     } catch (e) {
       alert(e.message || 'Failed to update status');
     } finally {
       setSaving(p => { const c = { ...p }; delete c[id]; return c; });
+    }
+  }
+
+  async function handleDelete(id, agencyName) {
+    if (!confirm(`Permanently delete the submission for "${agencyName}"? This cannot be undone.`)) return;
+    setDeleting(p => ({ ...p, [id]: true }));
+    try {
+      await api.deleteSubmission(id);
+      setSubmissions(prev => prev.filter(s => s.id !== id));
+      if (expanded === id) setExpanded(null);
+    } catch (e) {
+      alert(e.message || 'Failed to delete submission');
+    } finally {
+      setDeleting(p => { const c = { ...p }; delete c[id]; return c; });
     }
   }
 
@@ -127,6 +150,15 @@ export default function SubmissionsAdminPage() {
                       >
                         {STATUS_OPTIONS.map(o => <option key={o}>{o}</option>)}
                       </Sel>
+                      {(pending[s.id] ?? s.status) === 'Rejected' && (
+                        <textarea
+                          className="mt-1 w-full border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          rows={2}
+                          placeholder="Rejection reason (required)…"
+                          value={rejectionReasons[s.id] ?? (pending[s.id] === 'Rejected' ? '' : s.rejectionReason || '')}
+                          onChange={e => setRejectionReasons(p => ({ ...p, [s.id]: e.target.value }))}
+                        />
+                      )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {pending[s.id] && pending[s.id] !== s.status
@@ -169,7 +201,23 @@ export default function SubmissionsAdminPage() {
                             }
                             {s.approvedAt && <p className="mt-2"><span className="text-gray-500">Approved: </span>{fmtDT(s.approvedAt)}</p>}
                             {s.liveAt && <p><span className="text-gray-500">Live: </span>{fmtDT(s.liveAt)}</p>}
+                            {s.rejectedAt && <p className="mt-2"><span className="text-gray-500">Rejected: </span>{fmtDT(s.rejectedAt)}</p>}
+                            {s.rejectionReason && (
+                              <div className="mt-2 p-2 bg-red-50 rounded border border-red-100">
+                                <p className="text-gray-500 mb-0.5">Reason:</p>
+                                <p className="text-red-700">{s.rejectionReason}</p>
+                              </div>
+                            )}
                           </div>
+                        </div>
+                        <div className="mt-3 flex justify-end">
+                          <Btn
+                            variant="danger"
+                            onClick={() => handleDelete(s.id, s.agencyName)}
+                            disabled={deleting[s.id]}
+                          >
+                            {deleting[s.id] ? 'Deleting…' : 'Delete submission'}
+                          </Btn>
                         </div>
                       </td>
                     </tr>

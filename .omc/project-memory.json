@@ -41,8 +41,14 @@
     },
     {
       "path": "server/routes/submissions.js",
-      "accessCount": 5,
-      "lastAccessed": 1790819092036,
+      "accessCount": 8,
+      "lastAccessed": 1790821203997,
+      "type": "file"
+    },
+    {
+      "path": "client/src/pages/SubmissionsAdminPage.jsx",
+      "accessCount": 6,
+      "lastAccessed": 1790821227676,
       "type": "file"
     },
     {
@@ -52,15 +58,33 @@
       "type": "file"
     },
     {
-      "path": "server/package.json",
-      "accessCount": 2,
-      "lastAccessed": 1790818488787,
+      "path": "client/src/pages/SubmitPage.jsx",
+      "accessCount": 5,
+      "lastAccessed": 1790823518862,
       "type": "file"
     },
     {
       "path": "client/src/lib/api.js",
+      "accessCount": 4,
+      "lastAccessed": 1790821193755,
+      "type": "file"
+    },
+    {
+      "path": "server/db.js",
+      "accessCount": 3,
+      "lastAccessed": 1790821191661,
+      "type": "file"
+    },
+    {
+      "path": "client/src/components/ui.jsx",
+      "accessCount": 3,
+      "lastAccessed": 1790821192044,
+      "type": "file"
+    },
+    {
+      "path": "server/package.json",
       "accessCount": 2,
-      "lastAccessed": 1790818847337,
+      "lastAccessed": 1790818488787,
       "type": "file"
     },
     {
@@ -85,12 +109,6 @@
       "path": "server/.env.example",
       "accessCount": 1,
       "lastAccessed": 1790817582512,
-      "type": "file"
-    },
-    {
-      "path": "server/db.js",
-      "accessCount": 1,
-      "lastAccessed": 1790817586395,
       "type": "file"
     },
     {
@@ -154,27 +172,9 @@
       "type": "file"
     },
     {
-      "path": "client/src/components/ui.jsx",
-      "accessCount": 1,
-      "lastAccessed": 1790817636892,
-      "type": "file"
-    },
-    {
       "path": "client/src/pages/LoginPage.jsx",
       "accessCount": 1,
       "lastAccessed": 1790817643448,
-      "type": "file"
-    },
-    {
-      "path": "client/src/pages/SubmitPage.jsx",
-      "accessCount": 1,
-      "lastAccessed": 1790817685145,
-      "type": "file"
-    },
-    {
-      "path": "client/src/pages/SubmissionsAdminPage.jsx",
-      "accessCount": 1,
-      "lastAccessed": 1790817704745,
       "type": "file"
     },
     {
