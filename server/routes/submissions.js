@@ -139,6 +139,67 @@ router.put('/:id', (req, res) => {
   res.json(rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)));
 });
 
+// GET /api/submissions/export.csv — admin: download all submissions as CSV (one row per user)
+// Optional ?status=Approved|Waitlist|Live|Rejected to filter
+router.get('/export.csv', requireAdmin, (req, res) => {
+  const { status } = req.query;
+  const allowed = ['Waitlist', 'Approved', 'Live', 'Rejected'];
+  const rows = (status && allowed.includes(status))
+    ? db.prepare('SELECT * FROM submissions WHERE status = ? ORDER BY submitted_at ASC').all(status)
+    : db.prepare('SELECT * FROM submissions ORDER BY submitted_at ASC').all();
+
+  const csvField = (v) => {
+    if (v == null) return '';
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const headers = [
+    'Submission ID', 'Submitted At', 'Status',
+    'Agency Name', 'Brand Name', 'CT Agency ID', 'RH Agency ID',
+    'Marketing Platform', 'Artwork Builder', 'Uses Engage', 'Uses RTA',
+    'Submitter Name', 'Submitter Email', 'Submitter Title',
+    'User Type', 'User Name', 'User Role', 'CT Username', 'RH User ID', 'CT Access', 'RH Access',
+  ];
+
+  const lines = [headers.join(',')];
+
+  for (const row of rows) {
+    const base = [
+      row.id, row.submitted_at, row.status,
+      row.agency_name, row.brand_name, row.ct_agency_id || '', row.rh_agency_id || '',
+      row.marketing_platform, row.artwork_builder, row.engage_usage || '', row.rta_usage || '',
+      row.submitter_name, row.submitter_email, row.submitter_title,
+    ];
+
+    const mainUser = JSON.parse(row.main_user || '{}');
+    lines.push([
+      ...base,
+      'Main User',
+      mainUser.userName || '', mainUser.userRole || '',
+      mainUser.ctUsername || '', mainUser.rhUserId || '',
+      mainUser.toggleCTAccess || '', mainUser.toggleRHAccess || '',
+    ].map(csvField).join(','));
+
+    const additionalUsers = JSON.parse(row.additional_users || '[]');
+    for (const u of additionalUsers) {
+      lines.push([
+        ...base,
+        'Additional User',
+        u.userName || '', u.userRole || '',
+        u.ctUsername || '', u.rhUserId || '',
+        u.toggleCTAccess || '', u.toggleRHAccess || '',
+      ].map(csvField).join(','));
+    }
+  }
+
+  const csv = lines.join('\r\n');
+  const filename = `hub-pilot-submissions-${new Date().toISOString().slice(0, 10)}.csv`;
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send('﻿' + csv); // BOM so Excel opens UTF-8 correctly
+});
+
 // GET /api/submissions — admin: get all
 router.get('/', requireAdmin, (req, res) => {
   res.json(db.prepare('SELECT * FROM submissions ORDER BY submitted_at DESC').all().map(rowToSub));

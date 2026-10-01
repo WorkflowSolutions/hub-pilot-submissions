@@ -34,21 +34,27 @@
   "directoryMap": {},
   "hotPaths": [
     {
+      "path": "client/src/pages/SubmissionsAdminPage.jsx",
+      "accessCount": 12,
+      "lastAccessed": 1790894172643,
+      "type": "file"
+    },
+    {
+      "path": "server/routes/submissions.js",
+      "accessCount": 12,
+      "lastAccessed": 1790894176977,
+      "type": "file"
+    },
+    {
       "path": "client/src/App.jsx",
       "accessCount": 8,
       "lastAccessed": 1790819115975,
       "type": "file"
     },
     {
-      "path": "server/routes/submissions.js",
-      "accessCount": 8,
-      "lastAccessed": 1790821203997,
-      "type": "file"
-    },
-    {
-      "path": "client/src/pages/SubmissionsAdminPage.jsx",
-      "accessCount": 6,
-      "lastAccessed": 1790821227676,
+      "path": "client/src/lib/api.js",
+      "accessCount": 7,
+      "lastAccessed": 1790894154218,
       "type": "file"
     },
     {
@@ -61,12 +67,6 @@
       "path": "client/src/pages/SubmitPage.jsx",
       "accessCount": 5,
       "lastAccessed": 1790823518862,
-      "type": "file"
-    },
-    {
-      "path": "client/src/lib/api.js",
-      "accessCount": 4,
-      "lastAccessed": 1790821193755,
       "type": "file"
     },
     {
@@ -95,8 +95,8 @@
     },
     {
       "path": "index.html",
-      "accessCount": 1,
-      "lastAccessed": 1790817172672,
+      "accessCount": 2,
+      "lastAccessed": 1790894117329,
       "type": "file"
     },
     {

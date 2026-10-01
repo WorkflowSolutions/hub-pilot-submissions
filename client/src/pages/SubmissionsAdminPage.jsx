@@ -18,6 +18,7 @@ export default function SubmissionsAdminPage() {
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
   const [deleting, setDeleting] = useState({});
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     api.getAll()
@@ -76,6 +77,17 @@ export default function SubmissionsAdminPage() {
     }
   }
 
+  async function handleExportCsv() {
+    setExporting(true);
+    try {
+      await api.exportCsv(statusFilter);
+    } catch (e) {
+      alert(e.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   if (loading) return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-500 text-sm">Loading submissions…</div>;
   if (error) return <div className="max-w-6xl mx-auto px-4 py-8 text-red-600 text-sm">{error}</div>;
 
@@ -86,6 +98,14 @@ export default function SubmissionsAdminPage() {
           <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
           <p className="text-gray-500 text-sm mt-1">{submissions.length} total</p>
         </div>
+        <Btn variant="secondary" onClick={handleExportCsv} disabled={exporting || submissions.length === 0}>
+          <span className="flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            {exporting ? 'Exporting…' : statusFilter === 'All' ? 'Export CSV' : `Export ${statusFilter} CSV`}
+          </span>
+        </Btn>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6 items-center">
