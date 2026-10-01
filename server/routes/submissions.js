@@ -3,6 +3,40 @@ import db from '../db.js';
 
 const router = Router();
 
+function notifyTeams(submission) {
+  const url = process.env.TEAMS_WEBHOOK_URL;
+  if (!url) return;
+  const card = {
+    type: 'AdaptiveCard',
+    $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+    version: '1.4',
+    body: [
+      {
+        type: 'TextBlock',
+        text: 'New Hub Pilot Submission',
+        weight: 'Bolder',
+        size: 'Medium',
+      },
+      {
+        type: 'FactSet',
+        facts: [
+          { title: 'Brand', value: submission.brandName || '—' },
+          { title: 'Agency', value: submission.agencyName || '—' },
+          { title: 'Platform', value: submission.marketingPlatform || '—' },
+          { title: 'Requested User', value: `${submission.userName || '—'} | ${submission.userRole || '—'}` },
+          { title: 'Submitted by', value: submission.submitterName || '—' },
+        ],
+      },
+    ],
+  };
+  const payload = card;
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(r => console.log('[Teams] webhook status:', r.status)).catch(e => console.error('[Teams] webhook error:', e.message));
+}
+
 function requireAdmin(req, res, next) {
   const auth = req.headers.authorization || '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
@@ -69,7 +103,9 @@ router.post('/', (req, res) => {
     new Date().toISOString()
   );
 
-  res.status(201).json(rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)));
+  const saved = rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id));
+  notifyTeams(saved);
+  res.status(201).json(saved);
 });
 
 // POST /api/submissions/lookup — public: find own submission by email + agency name
