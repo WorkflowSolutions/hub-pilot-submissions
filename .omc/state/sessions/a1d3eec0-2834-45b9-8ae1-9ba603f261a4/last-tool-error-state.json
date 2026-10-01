@@ -1,7 +1,0 @@
-{
-  "tool_name": "Read",
-  "tool_input_preview": "{\"file_path\":\"/Users/rob.moyle/.claude/projects/-Users-rob-moyle-Desktop-Code-POCs-hub-pilot-submissions/memory/MEMORY.md\"}",
-  "error": "File does not exist. Note: your current working directory is /Users/rob.moyle/Desktop/Code/POCs/hub-pilot-submissions.",
-  "timestamp": "2026-10-01T01:12:48.627Z",
-  "retry_count": 1
-}

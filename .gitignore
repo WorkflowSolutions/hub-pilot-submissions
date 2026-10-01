@@ -4,3 +4,4 @@ server/data/
 client/dist/
 *.db
 claude.md
+.omc/
