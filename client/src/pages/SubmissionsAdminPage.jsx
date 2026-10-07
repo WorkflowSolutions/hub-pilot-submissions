@@ -1,10 +1,22 @@
 import { useState, useEffect, Fragment } from 'react';
 import { api } from '../lib/api';
-import { Badge, Card, Btn, Input, Sel } from '../components/ui';
+import { Badge, Card, Btn, Input, Sel, Label, Toggle } from '../components/ui';
 
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const STATUS_OPTIONS = ['Waitlist', 'Approved', 'Live', 'Rejected'];
+const EMPTY_USER = { userName: '', userRole: '', ctUsername: '', rhUserId: '', toggleCTAccess: 'No', toggleRHAccess: 'No' };
+
+function toEditForm(s) {
+  return {
+    submitterName: s.submitterName || '', submitterTitle: s.submitterTitle || '', submitterEmail: s.submitterEmail || '',
+    agencyName: s.agencyName || '', brandName: s.brandName || '', ctAgencyId: s.ctAgencyId || '', rhAgencyId: s.rhAgencyId || '',
+    marketingPlatform: s.marketingPlatform || '', artworkBuilder: s.artworkBuilder || '', engageUsage: s.engageUsage || '', rtaUsage: s.rtaUsage || '',
+    userName: s.userName || '', userRole: s.userRole || '', ctUsername: s.ctUsername || '', rhUserId: s.rhUserId || '',
+    toggleCTAccess: s.toggleCTAccess || 'No', toggleRHAccess: s.toggleRHAccess || 'No',
+    additionalUsers: (s.additionalUsers || []).map(u => ({ ...EMPTY_USER, ...u })),
+  };
+}
 
 export default function SubmissionsAdminPage() {
   const [submissions, setSubmissions] = useState([]);
@@ -19,6 +31,10 @@ export default function SubmissionsAdminPage() {
   const [saved, setSaved] = useState({});
   const [deleting, setDeleting] = useState({});
   const [exporting, setExporting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [resending, setResending] = useState({});
 
   useEffect(() => {
     api.getAll()
@@ -74,6 +90,65 @@ export default function SubmissionsAdminPage() {
       alert(e.message || 'Failed to delete submission');
     } finally {
       setDeleting(p => { const c = { ...p }; delete c[id]; return c; });
+    }
+  }
+
+  function startEdit(s) {
+    setEditingId(s.id);
+    setEditForm(toEditForm(s));
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm(null);
+  }
+
+  function setEditField(k, v) {
+    setEditForm(f => ({ ...f, [k]: v }));
+  }
+
+  function setAdditionalUser(i, patch) {
+    setEditForm(f => {
+      const u = [...f.additionalUsers];
+      u[i] = { ...u[i], ...patch };
+      return { ...f, additionalUsers: u };
+    });
+  }
+
+  function addAdditionalUser() {
+    setEditForm(f => ({ ...f, additionalUsers: [...f.additionalUsers, { ...EMPTY_USER }] }));
+  }
+
+  function removeAdditionalUser(i) {
+    setEditForm(f => {
+      const u = [...f.additionalUsers];
+      u.splice(i, 1);
+      return { ...f, additionalUsers: u };
+    });
+  }
+
+  async function saveEdit(id) {
+    setSavingEdit(true);
+    try {
+      const updated = await api.adminUpdate(id, editForm);
+      setSubmissions(prev => prev.map(s => s.id === id ? updated : s));
+      cancelEdit();
+    } catch (e) {
+      alert(e.message || 'Failed to save changes');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  async function handleResendTeams(id) {
+    setResending(p => ({ ...p, [id]: true }));
+    try {
+      await api.resendTeamsNotification(id);
+      alert('Resent to Teams.');
+    } catch (e) {
+      alert(e.message || 'Failed to resend Teams notification');
+    } finally {
+      setResending(p => { const c = { ...p }; delete c[id]; return c; });
     }
   }
 
@@ -148,7 +223,7 @@ export default function SubmissionsAdminPage() {
                   <tr className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <button
-                        onClick={() => setExpanded(expanded === s.id ? null : s.id)}
+                        onClick={() => { setExpanded(expanded === s.id ? null : s.id); cancelEdit(); }}
                         className="font-medium text-gray-900 hover:text-blue-600 text-left"
                       >
                         {s.agencyName} <span className="text-blue-400 text-xs">{expanded === s.id ? '▲' : '▼'}</span>
@@ -187,7 +262,56 @@ export default function SubmissionsAdminPage() {
                       }
                     </td>
                   </tr>
-                  {expanded === s.id && (
+                  {expanded === s.id && editingId === s.id && (
+                    <tr className="bg-blue-50">
+                      <td colSpan={7} className="px-6 py-4">
+                        <div className="grid grid-cols-3 gap-6 text-xs">
+                          <div className="space-y-2">
+                            <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Submitter</p>
+                            <div><Label>Name</Label><Input value={editForm.submitterName} onChange={e => setEditField('submitterName', e.target.value)} /></div>
+                            <div><Label>Title</Label><Input value={editForm.submitterTitle} onChange={e => setEditField('submitterTitle', e.target.value)} /></div>
+                            <div><Label>Email</Label><Input value={editForm.submitterEmail} onChange={e => setEditField('submitterEmail', e.target.value)} /></div>
+                            <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2 mt-4">Agency Details</p>
+                            <div><Label>Agency Name</Label><Input value={editForm.agencyName} onChange={e => setEditField('agencyName', e.target.value)} /></div>
+                            <div><Label>Brand Name</Label><Input value={editForm.brandName} onChange={e => setEditField('brandName', e.target.value)} /></div>
+                            <div><Label>CT Agency ID</Label><Input value={editForm.ctAgencyId} onChange={e => setEditField('ctAgencyId', e.target.value)} /></div>
+                            <div><Label>RH Agency ID</Label><Input value={editForm.rhAgencyId} onChange={e => setEditField('rhAgencyId', e.target.value)} /></div>
+                            <div><Label>Marketing Platform</Label><Sel value={editForm.marketingPlatform} onChange={e => setEditField('marketingPlatform', e.target.value)}><option>Realhub</option><option>Campaigntrack</option></Sel></div>
+                            <div><Label>Artwork Builder</Label><Sel value={editForm.artworkBuilder} onChange={e => setEditField('artworkBuilder', e.target.value)}><option>RHAWB</option><option>Other</option></Sel></div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Main User</p>
+                            <div><Label>Name</Label><Input value={editForm.userName} onChange={e => setEditField('userName', e.target.value)} /></div>
+                            <div><Label>Role</Label><Input value={editForm.userRole} onChange={e => setEditField('userRole', e.target.value)} /></div>
+                            <div><Label>CT Username</Label><Input value={editForm.ctUsername} onChange={e => setEditField('ctUsername', e.target.value)} /></div>
+                            <div><Label>RH User ID</Label><Input value={editForm.rhUserId} onChange={e => setEditField('rhUserId', e.target.value)} /></div>
+                            <Toggle label="CT Access" value={editForm.toggleCTAccess} onChange={v => setEditField('toggleCTAccess', v)} />
+                            <Toggle label="RH Access" value={editForm.toggleRHAccess} onChange={v => setEditField('toggleRHAccess', v)} />
+                          </div>
+                          <div className="space-y-3">
+                            <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Additional Users</p>
+                            {editForm.additionalUsers.map((u, i) => (
+                              <div key={i} className="border border-blue-100 rounded-lg p-2 space-y-2 bg-white">
+                                <div className="flex justify-end"><button type="button" onClick={() => removeAdditionalUser(i)} className="text-red-500 hover:text-red-700 text-xs font-medium">Remove</button></div>
+                                <div><Label>Name</Label><Input value={u.userName} onChange={e => setAdditionalUser(i, { userName: e.target.value })} /></div>
+                                <div><Label>Role</Label><Input value={u.userRole} onChange={e => setAdditionalUser(i, { userRole: e.target.value })} /></div>
+                                <div><Label>CT Username</Label><Input value={u.ctUsername} onChange={e => setAdditionalUser(i, { ctUsername: e.target.value })} /></div>
+                                <div><Label>RH User ID</Label><Input value={u.rhUserId} onChange={e => setAdditionalUser(i, { rhUserId: e.target.value })} /></div>
+                              </div>
+                            ))}
+                            <button type="button" onClick={addAdditionalUser} className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-xs font-medium text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                              + Add user
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                          <Btn variant="secondary" onClick={cancelEdit} disabled={savingEdit}>Cancel</Btn>
+                          <Btn onClick={() => saveEdit(s.id)} disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</Btn>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {expanded === s.id && editingId !== s.id && (
                     <tr className="bg-blue-50">
                       <td colSpan={7} className="px-6 py-4">
                         <div className="grid grid-cols-3 gap-6 text-xs">
@@ -230,7 +354,17 @@ export default function SubmissionsAdminPage() {
                             )}
                           </div>
                         </div>
-                        <div className="mt-3 flex justify-end">
+                        <div className="mt-3 flex justify-end gap-2">
+                          <Btn variant="secondary" onClick={() => startEdit(s)}>
+                            Edit
+                          </Btn>
+                          <Btn
+                            variant="secondary"
+                            onClick={() => handleResendTeams(s.id)}
+                            disabled={resending[s.id]}
+                          >
+                            {resending[s.id] ? 'Resending…' : 'Resend to Teams'}
+                          </Btn>
                           <Btn
                             variant="danger"
                             onClick={() => handleDelete(s.id, s.agencyName)}

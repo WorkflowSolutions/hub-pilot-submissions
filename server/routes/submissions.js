@@ -29,12 +29,17 @@ function notifyTeams(submission) {
       },
     ],
   };
-  const payload = card;
-  fetch(url, {
+  return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }).then(r => console.log('[Teams] webhook status:', r.status)).catch(e => console.error('[Teams] webhook error:', e.message));
+    body: JSON.stringify(card),
+  }).then(r => {
+    console.log('[Teams] webhook status:', r.status);
+    return { ok: r.ok, status: r.status };
+  }).catch(e => {
+    console.error('[Teams] webhook error:', e.message);
+    return { ok: false, error: e.message };
+  });
 }
 
 function requireAdmin(req, res, next) {
@@ -173,6 +178,51 @@ router.put('/:id', (req, res) => {
   );
 
   res.json(rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)));
+});
+
+// PUT /api/submissions/:id/admin — admin: edit any field (bypasses email verification)
+router.put('/:id/admin', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const d = req.body;
+
+  const existing = db.prepare('SELECT * FROM submissions WHERE id = ?').get(id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+
+  db.prepare(`
+    UPDATE submissions SET
+      submitter_name = ?, submitter_title = ?, submitter_email = ?,
+      agency_name = ?, brand_name = ?, ct_agency_id = ?, rh_agency_id = ?,
+      marketing_platform = ?, artwork_builder = ?, engage_usage = ?, rta_usage = ?,
+      main_user = ?, additional_users = ?
+    WHERE id = ?
+  `).run(
+    d.submitterName, d.submitterTitle, d.submitterEmail,
+    d.agencyName, d.brandName,
+    d.ctAgencyId || null, d.rhAgencyId || null,
+    d.marketingPlatform, d.artworkBuilder,
+    d.engageUsage || null, d.rtaUsage || null,
+    JSON.stringify({
+      userName: d.userName, userRole: d.userRole,
+      ctUsername: d.ctUsername || null, rhUserId: d.rhUserId || null,
+      toggleCTAccess: d.toggleCTAccess, toggleRHAccess: d.toggleRHAccess,
+    }),
+    JSON.stringify(d.additionalUsers || []),
+    id
+  );
+
+  res.json(rowToSub(db.prepare('SELECT * FROM submissions WHERE id = ?').get(id)));
+});
+
+// POST /api/submissions/:id/notify-teams — admin: (re)send the Teams webhook for a submission
+router.post('/:id/notify-teams', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const existing = db.prepare('SELECT * FROM submissions WHERE id = ?').get(id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  if (!process.env.TEAMS_WEBHOOK_URL) return res.status(400).json({ error: 'TEAMS_WEBHOOK_URL is not configured' });
+
+  const result = await notifyTeams(rowToSub(existing));
+  if (!result?.ok) return res.status(502).json({ error: 'Teams webhook call failed', detail: result });
+  res.json({ ok: true });
 });
 
 // GET /api/submissions/export.csv — admin: download all submissions as CSV (one row per user)
