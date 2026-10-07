@@ -4,6 +4,7 @@ import { Label, Input, Sel, Btn, Card, Toggle, TriToggle, StepBar, RSection, RRo
 
 const CONTACT_EMAIL = 'angela.yu@costar.com';
 const STEPS = ['Your Details', 'Confirm', 'Agency', 'Users', 'Review'];
+const ROLE_OPTIONS = ['Brand Admin', 'Office Admin', 'Agent', 'Assistant', 'Internal (Support)'];
 const EMPTY_USER = { userName: '', userRole: '', ctUsername: '', rhUserId: '', toggleCTAccess: 'No', toggleRHAccess: 'No' };
 const EMPTY = {
   submitterName: '', submitterTitle: '', submitterEmail: '',
@@ -95,7 +96,14 @@ function UserFields({ user, onChange, onRemove, index }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div><Label required={index === 0}>Name</Label><Input value={user.userName} onChange={e => set('userName', e.target.value)} placeholder="John Doe" /></div>
-        <div><Label required={index === 0}>Role</Label><Input value={user.userRole} onChange={e => set('userRole', e.target.value)} placeholder="Office Manager" /></div>
+        <div>
+          <Label required={index === 0}>Role</Label>
+          <Sel value={user.userRole} onChange={e => set('userRole', e.target.value)}>
+            <option value="">Select role…</option>
+            {user.userRole && !ROLE_OPTIONS.includes(user.userRole) && <option value={user.userRole}>{user.userRole}</option>}
+            {ROLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+          </Sel>
+        </div>
         <div><Label>CT Username</Label><Input value={user.ctUsername} onChange={e => set('ctUsername', e.target.value)} placeholder="jdoe@acme.com.au" /></div>
         <div><Label>RH User ID</Label><Input value={user.rhUserId} onChange={e => set('rhUserId', e.target.value)} placeholder="123456" /></div>
       </div>

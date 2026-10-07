@@ -6,6 +6,7 @@ const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-AU', { day: 
 const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const STATUS_OPTIONS = ['Waitlist', 'Approved', 'Live', 'Rejected'];
 const EMPTY_USER = { userName: '', userRole: '', ctUsername: '', rhUserId: '', toggleCTAccess: 'No', toggleRHAccess: 'No' };
+const ROLE_OPTIONS = ['Brand Admin', 'Office Admin', 'Agent', 'Assistant', 'Internal (Support)'];
 
 function toEditForm(s) {
   return {
@@ -45,7 +46,7 @@ export default function SubmissionsAdminPage() {
 
   const filtered = submissions
     .filter(s => statusFilter === 'All' || s.status === statusFilter)
-    .filter(s => !search || [s.agencyName, s.brandName, s.submitterName, s.submitterEmail].some(v => v?.toLowerCase().includes(search.toLowerCase())))
+    .filter(s => !search || [s.agencyName, s.brandName, s.submitterName, s.submitterEmail, s.userName].some(v => v?.toLowerCase().includes(search.toLowerCase())))
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
   const counts = {
@@ -163,11 +164,11 @@ export default function SubmissionsAdminPage() {
     }
   }
 
-  if (loading) return <div className="max-w-6xl mx-auto px-4 py-8 text-gray-500 text-sm">Loading submissions…</div>;
-  if (error) return <div className="max-w-6xl mx-auto px-4 py-8 text-red-600 text-sm">{error}</div>;
+  if (loading) return <div className="max-w-screen-2xl mx-auto px-4 py-8 text-gray-500 text-sm">Loading submissions…</div>;
+  if (error) return <div className="max-w-screen-2xl mx-auto px-4 py-8 text-red-600 text-sm">{error}</div>;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-screen-2xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
@@ -209,11 +210,12 @@ export default function SubmissionsAdminPage() {
         <Card className="p-12 text-center text-gray-400">No submissions found.</Card>
       ) : (
         <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                {['Agency', 'Platform', 'Submitted By', 'Submitted', 'Status', 'Update', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                {['Name', 'Role', 'Brand', 'Agency', 'Platform', 'Submitted By', 'Submitted', 'Status', 'Update', ''].map(h => (
+                  <th key={h} className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -221,23 +223,25 @@ export default function SubmissionsAdminPage() {
               {filtered.map(s => (
                 <Fragment key={s.id}>
                   <tr className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <button
                         onClick={() => { setExpanded(expanded === s.id ? null : s.id); cancelEdit(); }}
-                        className="font-medium text-gray-900 hover:text-blue-600 text-left"
+                        className="font-medium text-gray-900 hover:text-blue-600 text-left whitespace-nowrap"
                       >
-                        {s.agencyName} <span className="text-blue-400 text-xs">{expanded === s.id ? '▲' : '▼'}</span>
+                        {s.userName || '—'} <span className="text-blue-400 text-xs">{expanded === s.id ? '▲' : '▼'}</span>
                       </button>
-                      <div className="text-xs text-gray-400">{s.brandName}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-700">{s.marketingPlatform}</td>
-                    <td className="px-4 py-3 text-gray-700">
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{s.userRole || '—'}</td>
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{s.brandName || '—'}</td>
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{s.agencyName || '—'}</td>
+                    <td className="px-3 py-3 text-gray-700 whitespace-nowrap">{s.marketingPlatform}</td>
+                    <td className="px-3 py-3 text-gray-700">
                       {s.submitterName}
                       <div className="text-xs text-gray-400">{s.submitterEmail}</div>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{fmtDate(s.submittedAt)}</td>
-                    <td className="px-4 py-3"><Badge status={s.status} /></td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3 text-gray-500 whitespace-nowrap">{fmtDate(s.submittedAt)}</td>
+                    <td className="px-3 py-3"><Badge status={s.status} /></td>
+                    <td className="px-3 py-3">
                       <Sel
                         className="w-32"
                         value={pending[s.id] ?? s.status}
@@ -255,7 +259,7 @@ export default function SubmissionsAdminPage() {
                         />
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {pending[s.id] && pending[s.id] !== s.status
                         ? <Btn onClick={() => handleSave(s.id)} disabled={saving[s.id]}>{saving[s.id] ? 'Saving…' : 'Save'}</Btn>
                         : saved[s.id] ? <span className="text-green-600 text-xs font-medium">✓ Saved</span> : null
@@ -264,7 +268,7 @@ export default function SubmissionsAdminPage() {
                   </tr>
                   {expanded === s.id && editingId === s.id && (
                     <tr className="bg-blue-50">
-                      <td colSpan={7} className="px-6 py-4">
+                      <td colSpan={10} className="px-6 py-4">
                         <div className="grid grid-cols-3 gap-6 text-xs">
                           <div className="space-y-2">
                             <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Submitter</p>
@@ -282,7 +286,14 @@ export default function SubmissionsAdminPage() {
                           <div className="space-y-2">
                             <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Main User</p>
                             <div><Label>Name</Label><Input value={editForm.userName} onChange={e => setEditField('userName', e.target.value)} /></div>
-                            <div><Label>Role</Label><Input value={editForm.userRole} onChange={e => setEditField('userRole', e.target.value)} /></div>
+                            <div>
+                              <Label>Role</Label>
+                              <Sel value={editForm.userRole} onChange={e => setEditField('userRole', e.target.value)}>
+                                <option value="">Select role…</option>
+                                {editForm.userRole && !ROLE_OPTIONS.includes(editForm.userRole) && <option value={editForm.userRole}>{editForm.userRole}</option>}
+                                {ROLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                              </Sel>
+                            </div>
                             <div><Label>CT Username</Label><Input value={editForm.ctUsername} onChange={e => setEditField('ctUsername', e.target.value)} /></div>
                             <div><Label>RH User ID</Label><Input value={editForm.rhUserId} onChange={e => setEditField('rhUserId', e.target.value)} /></div>
                             <Toggle label="CT Access" value={editForm.toggleCTAccess} onChange={v => setEditField('toggleCTAccess', v)} />
@@ -294,7 +305,14 @@ export default function SubmissionsAdminPage() {
                               <div key={i} className="border border-blue-100 rounded-lg p-2 space-y-2 bg-white">
                                 <div className="flex justify-end"><button type="button" onClick={() => removeAdditionalUser(i)} className="text-red-500 hover:text-red-700 text-xs font-medium">Remove</button></div>
                                 <div><Label>Name</Label><Input value={u.userName} onChange={e => setAdditionalUser(i, { userName: e.target.value })} /></div>
-                                <div><Label>Role</Label><Input value={u.userRole} onChange={e => setAdditionalUser(i, { userRole: e.target.value })} /></div>
+                                <div>
+                                  <Label>Role</Label>
+                                  <Sel value={u.userRole} onChange={e => setAdditionalUser(i, { userRole: e.target.value })}>
+                                    <option value="">Select role…</option>
+                                    {u.userRole && !ROLE_OPTIONS.includes(u.userRole) && <option value={u.userRole}>{u.userRole}</option>}
+                                    {ROLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                                  </Sel>
+                                </div>
                                 <div><Label>CT Username</Label><Input value={u.ctUsername} onChange={e => setAdditionalUser(i, { ctUsername: e.target.value })} /></div>
                                 <div><Label>RH User ID</Label><Input value={u.rhUserId} onChange={e => setAdditionalUser(i, { rhUserId: e.target.value })} /></div>
                               </div>
@@ -313,7 +331,7 @@ export default function SubmissionsAdminPage() {
                   )}
                   {expanded === s.id && editingId !== s.id && (
                     <tr className="bg-blue-50">
-                      <td colSpan={7} className="px-6 py-4">
+                      <td colSpan={10} className="px-6 py-4">
                         <div className="grid grid-cols-3 gap-6 text-xs">
                           <div>
                             <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Agency Details</p>
@@ -380,6 +398,7 @@ export default function SubmissionsAdminPage() {
               ))}
             </tbody>
           </table>
+        </div>
         </Card>
       )}
     </div>
