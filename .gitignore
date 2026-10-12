@@ -5,3 +5,4 @@ client/dist/
 *.db
 claude.md
 .omc/
+server/scripts/backfill-data*.json

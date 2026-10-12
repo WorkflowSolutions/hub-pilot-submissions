@@ -5,7 +5,7 @@ import { Badge, Card, Btn, Input, Sel, Label, Toggle } from '../components/ui';
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-AU', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const STATUS_OPTIONS = ['Waitlist', 'Approved', 'Live', 'Rejected'];
-const EMPTY_USER = { userName: '', userRole: '', ctUsername: '', rhUserId: '', toggleCTAccess: 'No', toggleRHAccess: 'No' };
+const EMPTY_USER = { userName: '', userRole: '', userEmail: '', ctUsername: '', rhUserId: '', toggleCTAccess: 'No', toggleRHAccess: 'No' };
 const ROLE_OPTIONS = ['Brand Admin', 'Office Admin', 'Agent', 'Assistant', 'Internal (Support)'];
 
 function toEditForm(s) {
@@ -13,7 +13,7 @@ function toEditForm(s) {
     submitterName: s.submitterName || '', submitterTitle: s.submitterTitle || '', submitterEmail: s.submitterEmail || '',
     agencyName: s.agencyName || '', brandName: s.brandName || '', ctAgencyId: s.ctAgencyId || '', rhAgencyId: s.rhAgencyId || '',
     marketingPlatform: s.marketingPlatform || '', artworkBuilder: s.artworkBuilder || '', engageUsage: s.engageUsage || '', rtaUsage: s.rtaUsage || '',
-    userName: s.userName || '', userRole: s.userRole || '', ctUsername: s.ctUsername || '', rhUserId: s.rhUserId || '',
+    userName: s.userName || '', userRole: s.userRole || '', userEmail: s.userEmail || '', ctUsername: s.ctUsername || '', rhUserId: s.rhUserId || '',
     toggleCTAccess: s.toggleCTAccess || 'No', toggleRHAccess: s.toggleRHAccess || 'No',
     additionalUsers: (s.additionalUsers || []).map(u => ({ ...EMPTY_USER, ...u })),
   };
@@ -294,6 +294,7 @@ export default function SubmissionsAdminPage() {
                                 {ROLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
                               </Sel>
                             </div>
+                            <div><Label>Email</Label><Input value={editForm.userEmail} onChange={e => setEditField('userEmail', e.target.value)} /></div>
                             <div><Label>CT Username</Label><Input value={editForm.ctUsername} onChange={e => setEditField('ctUsername', e.target.value)} /></div>
                             <div><Label>RH User ID</Label><Input value={editForm.rhUserId} onChange={e => setEditField('rhUserId', e.target.value)} /></div>
                             <Toggle label="CT Access" value={editForm.toggleCTAccess} onChange={v => setEditField('toggleCTAccess', v)} />
@@ -313,6 +314,7 @@ export default function SubmissionsAdminPage() {
                                     {ROLE_OPTIONS.map(o => <option key={o}>{o}</option>)}
                                   </Sel>
                                 </div>
+                                <div><Label>Email</Label><Input value={u.userEmail} onChange={e => setAdditionalUser(i, { userEmail: e.target.value })} /></div>
                                 <div><Label>CT Username</Label><Input value={u.ctUsername} onChange={e => setAdditionalUser(i, { ctUsername: e.target.value })} /></div>
                                 <div><Label>RH User ID</Label><Input value={u.rhUserId} onChange={e => setAdditionalUser(i, { rhUserId: e.target.value })} /></div>
                               </div>
@@ -345,6 +347,7 @@ export default function SubmissionsAdminPage() {
                             <p className="font-semibold text-gray-500 uppercase tracking-wide mb-2">Main User</p>
                             <p><span className="text-gray-500">Name: </span>{s.userName}</p>
                             <p><span className="text-gray-500">Role: </span>{s.userRole}</p>
+                            <p><span className="text-gray-500">Email: </span>{s.userEmail || '—'}</p>
                             <p><span className="text-gray-500">CT Username: </span>{s.ctUsername || '—'}</p>
                             <p><span className="text-gray-500">RH User ID: </span>{s.rhUserId || '—'}</p>
                             <p><span className="text-gray-500">CT Access: </span>{s.toggleCTAccess}</p>
@@ -356,6 +359,7 @@ export default function SubmissionsAdminPage() {
                               ? s.additionalUsers.map((u, i) => (
                                   <div key={i} className="mb-2 pb-2 border-b border-blue-100 last:border-0">
                                     <p className="font-medium">{u.userName} — {u.userRole}</p>
+                                    <p className="text-gray-400">{u.userEmail || ''}</p>
                                     <p className="text-gray-400">{u.ctUsername || u.rhUserId || ''}</p>
                                   </div>
                                 ))

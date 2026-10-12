@@ -100,7 +100,7 @@ router.post('/', (req, res) => {
     d.marketingPlatform, d.artworkBuilder,
     d.engageUsage || null, d.rtaUsage || null,
     JSON.stringify({
-      userName: d.userName, userRole: d.userRole,
+      userName: d.userName, userRole: d.userRole, userEmail: d.userEmail || null,
       ctUsername: d.ctUsername || null, rhUserId: d.rhUserId || null,
       toggleCTAccess: d.toggleCTAccess, toggleRHAccess: d.toggleRHAccess,
     }),
@@ -169,7 +169,7 @@ router.put('/:id', (req, res) => {
     d.marketingPlatform, d.artworkBuilder,
     d.engageUsage || null, d.rtaUsage || null,
     JSON.stringify({
-      userName: d.userName, userRole: d.userRole,
+      userName: d.userName, userRole: d.userRole, userEmail: d.userEmail || null,
       ctUsername: d.ctUsername || null, rhUserId: d.rhUserId || null,
       toggleCTAccess: d.toggleCTAccess, toggleRHAccess: d.toggleRHAccess,
     }),
@@ -202,7 +202,7 @@ router.put('/:id/admin', requireAdmin, (req, res) => {
     d.marketingPlatform, d.artworkBuilder,
     d.engageUsage || null, d.rtaUsage || null,
     JSON.stringify({
-      userName: d.userName, userRole: d.userRole,
+      userName: d.userName, userRole: d.userRole, userEmail: d.userEmail || null,
       ctUsername: d.ctUsername || null, rhUserId: d.rhUserId || null,
       toggleCTAccess: d.toggleCTAccess, toggleRHAccess: d.toggleRHAccess,
     }),
@@ -245,7 +245,7 @@ router.get('/export.csv', requireAdmin, (req, res) => {
     'Agency Name', 'Brand Name', 'CT Agency ID', 'RH Agency ID',
     'Marketing Platform', 'Artwork Builder', 'Uses Engage', 'Uses RTA',
     'Submitter Name', 'Submitter Email', 'Submitter Title',
-    'User Type', 'User Name', 'User Role', 'CT Username', 'RH User ID', 'CT Access', 'RH Access',
+    'User Type', 'User Name', 'User Role', 'User Email', 'CT Username', 'RH User ID', 'CT Access', 'RH Access',
   ];
 
   const lines = [headers.join(',')];
@@ -262,7 +262,7 @@ router.get('/export.csv', requireAdmin, (req, res) => {
     lines.push([
       ...base,
       'Main User',
-      mainUser.userName || '', mainUser.userRole || '',
+      mainUser.userName || '', mainUser.userRole || '', mainUser.userEmail || '',
       mainUser.ctUsername || '', mainUser.rhUserId || '',
       mainUser.toggleCTAccess || '', mainUser.toggleRHAccess || '',
     ].map(csvField).join(','));
@@ -272,7 +272,7 @@ router.get('/export.csv', requireAdmin, (req, res) => {
       lines.push([
         ...base,
         'Additional User',
-        u.userName || '', u.userRole || '',
+        u.userName || '', u.userRole || '', u.userEmail || '',
         u.ctUsername || '', u.rhUserId || '',
         u.toggleCTAccess || '', u.toggleRHAccess || '',
       ].map(csvField).join(','));
